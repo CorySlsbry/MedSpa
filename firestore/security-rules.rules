@@ -1,0 +1,221 @@
+rules_version = '2';
+
+// Aesthera CRM — Firestore security rules
+// ----------------------------------------
+// All app writes happen server-side via the Firebase Admin SDK, which
+// bypasses these rules entirely. These rules are defense-in-depth: they
+// govern what happens if someone ever talks to Firestore with the client
+// SDK directly (e.g., an in-app dashboard later, or a leaked OAuth token).
+//
+// Posture:
+//   - Default DENY everything.
+//   - super_admin custom claim (set in auth-server.ts ensureUserRecord):
+//       read + write on most collections,
+//       create-only on audit_log (no update, no delete — append-only).
+//   - Public reads: NONE.
+//   - Public writes: NONE. The /api/demo path uses the Admin SDK.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper: caller is super_admin
+    function isSuperAdmin() {
+      return request.auth != null
+        && request.auth.token.role == 'super_admin';
+    }
+
+    // ── Users ──
+    match /users/{uid} {
+      allow read: if isSuperAdmin();
+      // Users can read their own doc (for profile pages, etc.)
+      allow read: if request.auth != null && request.auth.uid == uid;
+      // Only super_admin writes; suspending or deleting another user requires it.
+      allow write: if isSuperAdmin();
+    }
+
+    // ── Login attempts ──
+    match /login_attempts/{id} {
+      allow read: if isSuperAdmin();
+      // Append-only. No client writes — admin SDK only.
+      allow create: if false;
+      allow update, delete: if false;
+    }
+
+    // ── CRM core ──
+    match /companies/{id} { allow read, write: if isSuperAdmin(); }
+    match /contacts/{id}  { allow read, write: if isSuperAdmin(); }
+    match /tags/{id}      { allow read, write: if isSuperAdmin(); }
+    match /pipeline_stages/{id} { allow read, write: if isSuperAdmin(); }
+    match /leads/{id}     { allow read, write: if isSuperAdmin(); }
+    match /deals/{id}     { allow read, write: if isSuperAdmin(); }
+    match /activities/{id} { allow read, write: if isSuperAdmin(); }
+    match /notes/{id}     { allow read, write: if isSuperAdmin(); }
+    match /tasks/{id}     { allow read, write: if isSuperAdmin(); }
+    match /workflows/{id} { allow read, write: if isSuperAdmin(); }
+    match /workflow_enrollments/{id} { allow read: if isSuperAdmin(); allow write: if false; }
+
+    // ── Audit log ──
+    // Append-only. Even super_admin cannot UPDATE or DELETE audit rows.
+    // To redact, super_admin INSERTS a row with action='redaction'.
+    match /audit_log/{id} {
+      allow read: if isSuperAdmin();
+      allow create: if isSuperAdmin();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ── Tenants (Phase 2) ──
+    // Helper: caller belongs to this tenant (any role)
+    function isTenantMember(tenantId) {
+      return request.auth != null
+        && request.auth.token.tenant_id == tenantId;
+    }
+    function isTenantOwner(tenantId) {
+      return isTenantMember(tenantId)
+        && request.auth.token.role == 'tenant_owner';
+    }
+    function isTenantProvider(tenantId) {
+      return isTenantMember(tenantId)
+        && request.auth.token.role == 'tenant_provider';
+    }
+    function isTenantClient(tenantId) {
+      return isTenantMember(tenantId)
+        && request.auth.token.role == 'tenant_client';
+    }
+
+    // Tenant root doc: super_admin or the tenant owner reads/writes; nobody
+    // outside the tenant has any access.
+    match /tenants/{tenantId} {
+      allow read: if isSuperAdmin() || isTenantMember(tenantId);
+      allow create, update: if isSuperAdmin();
+      allow update: if isTenantOwner(tenantId);
+      allow delete: if isSuperAdmin();
+
+      // Locations — owner can manage; providers/clients read
+      match /locations/{locId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isTenantOwner(tenantId);
+      }
+
+      // Providers — owner can manage; providers can read all peers; clients read
+      match /providers/{provId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isTenantOwner(tenantId);
+        // A provider can update their OWN doc
+        allow update: if isTenantProvider(tenantId)
+          && request.auth.uid == provId;
+      }
+
+      // Clients (the clinic's patients) — owner + providers; clients can
+      // read THEIR OWN doc only. Phase 3 will refine for PHI scope.
+      match /clients/{clientId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || isTenantProvider(tenantId)
+          || (isTenantClient(tenantId) && resource.data.user_id == request.auth.uid);
+        allow create, update: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || isTenantProvider(tenantId);
+        allow delete: if isSuperAdmin() || isTenantOwner(tenantId);
+      }
+
+      // Appointments — owner + providers + the booking client
+      match /appointments/{aptId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || isTenantProvider(tenantId)
+          || (isTenantClient(tenantId) && resource.data.client_user_id == request.auth.uid);
+        allow create, update: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || isTenantProvider(tenantId);
+        allow delete: if isSuperAdmin() || isTenantOwner(tenantId);
+      }
+
+      // Charts — provider authoring + owner read + the client themselves
+      // Once status='signed' is in the resource, NO updates are allowed
+      // (defense-in-depth — app layer also enforces this).
+      match /charts/{chartId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || (isTenantProvider(tenantId) && resource.data.provider_id == request.auth.uid)
+          || (isTenantClient(tenantId) && resource.data.client_id == request.auth.uid);
+        allow create: if isSuperAdmin()
+          || (isTenantProvider(tenantId) && request.resource.data.provider_id == request.auth.uid);
+        allow update: if (isSuperAdmin()
+            || (isTenantProvider(tenantId) && resource.data.provider_id == request.auth.uid))
+          && resource.data.status == 'draft';
+        allow delete: if false; // signed or draft, charts are forever
+      }
+
+      // Services catalog — owner manages; providers + clients read
+      match /services/{svcId} {
+        allow read: if isSuperAdmin() || isTenantMember(tenantId);
+        allow write: if isSuperAdmin() || isTenantOwner(tenantId);
+      }
+
+      // Persistent marketing campaigns — owner manages; providers can read
+      // for visibility into outreach. Clients have no access.
+      match /campaigns/{campaignId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || isTenantProvider(tenantId);
+        allow write: if isSuperAdmin() || isTenantOwner(tenantId);
+      }
+
+      // Per-client campaign run history — owner reads, super_admin can
+      // see across tenants. Clients can read their OWN runs only (so
+      // future client-portal "messages" view works).
+      match /campaign_runs/{runId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || (isTenantClient(tenantId) && resource.data.client_id == request.auth.uid);
+        // All writes Admin-SDK only (cron + send endpoints)
+        allow create, update, delete: if false;
+      }
+
+      // OAuth connection tokens — sensitive. Reads are server-side only
+      // (Admin SDK bypasses these rules). NO client-SDK access ever.
+      match /social_connections/{platform} {
+        allow read, write: if false;
+      }
+
+      // Consent templates — owner manages; provider reads.
+      match /consent_templates/{tplId} {
+        allow read: if isSuperAdmin() || isTenantOwner(tenantId) || isTenantProvider(tenantId);
+        allow write: if false;
+      }
+
+      // Signed consent records — owner reads; client reads their own.
+      // Public signing endpoint uses Admin SDK so client-SDK writes denied.
+      match /consents/{consentId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || (isTenantClient(tenantId) && resource.data.client_id == request.auth.uid);
+        allow write: if false;
+      }
+
+      // Photos — owner + provider read/write. Clients can read their own.
+      // All actual writes go through the Admin SDK + signed URLs; rules
+      // are defense-in-depth.
+      match /photos/{photoId} {
+        allow read: if isSuperAdmin()
+          || isTenantOwner(tenantId)
+          || isTenantProvider(tenantId)
+          || (isTenantClient(tenantId) && resource.data.client_id == request.auth.uid);
+        allow write: if false;
+      }
+
+      // Per-tenant monthly usage counters — owner reads, all writes
+      // server-side via bumpMonthlyUsage().
+      match /usage/{period} {
+        allow read: if isSuperAdmin() || isTenantOwner(tenantId);
+        allow write: if false;
+      }
+    }
+  }
+}

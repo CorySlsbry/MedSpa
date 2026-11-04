@@ -1,0 +1,23 @@
+# Cloudflare Email Worker — parses inbound mail + POSTs to medspa-web's
+# inbound-email handler + forwards to Gmail. See src/index.js for the
+# behavior contract. Deploy with `wrangler deploy` from this directory.
+
+name = "aesthera-inbound-email"
+main = "src/index.js"
+compatibility_date = "2026-05-01"
+
+# Plain-text vars — committed to repo, no secrets here.
+[vars]
+WEBHOOK_URL = "https://aesthera.io/api/marketing/inbound/email"
+FORWARD_TO  = "cory.salisbury@gmail.com"
+
+# WEBHOOK_SECRET must be set via `wrangler secret put WEBHOOK_SECRET`
+# using the value of INBOUND_EMAIL_SECRET stored in Google Secret Manager
+# (already mounted on Cloud Run as the env var of the same name).
+
+# Email Routing binding so Cloudflare Email Routing's "Send to a Worker"
+# rule can target this Worker. The actual rule (which addresses go to
+# the worker) is configured in the Cloudflare dashboard under
+# Email Routing → Routing rules.
+[[send_email]]
+name = "FORWARDER"

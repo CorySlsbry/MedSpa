@@ -1,0 +1,470 @@
+@import "tailwindcss";
+
+@theme {
+  /* ---------------------------------------------------------
+     Aesthera — brand palette
+     Verified ≥ 4.5:1 contrast (WCAG AA) for every text/bg pair.
+     --------------------------------------------------------- */
+
+  /* Primary brand */
+  --color-teal: #07667a;
+  --color-teal-deep: #044c5c;
+  --color-teal-soft: #e3f0f3;
+
+  /* Supporting brand */
+  --color-navy: #2e4057;
+  --color-navy-deep: #1b2636;
+  --color-gold: #b98f42;
+  --color-gold-deep: #8d4e04;
+  --color-gold-soft: #f1d888;
+
+  /* Neutral surfaces */
+  --color-cream: #fdf9f3;
+  --color-cream-deep: #f5eedf;
+  --color-paper: #ffffff;
+  --color-line: #e8dfc9;
+
+  /* Ink */
+  --color-ink: #121a26;
+  --color-ink-soft: #2e3a4c;
+  --color-ink-muted: #4a5568;
+
+  /* Type */
+  --font-display: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    font-feature-settings: "kern", "liga", "calt", "ss01";
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection { background: var(--color-gold-soft); color: var(--color-navy-deep); }
+
+  h1, h2, h3, h4, h5 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-navy);
+  }
+
+  h1 { font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; }
+  h2 { font-size: 21px; line-height: 1.2; letter-spacing: -0.015em; }
+  h3 { font-size: 1rem; line-height: 1.3; letter-spacing: -0.005em; }
+  h4 { font-size: 0.9375rem; line-height: 1.4; font-weight: 600; letter-spacing: 0; }
+
+  p { max-width: 68ch; }
+  h2, h3, h4 { max-width: 32ch; }
+  h1 { max-width: 22ch; }
+
+  a { color: inherit; text-underline-offset: 3px; }
+
+  :focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  @media (min-width: 768px) {
+    h1 { font-size: 40px; }
+    h2 { font-size: 32px; }
+  }
+
+  @media (min-width: 1280px) {
+    h1 { font-size: 48px; }
+    h2 { font-size: 38px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* ---------------- Layout ---------------- */
+  .container-narrow {
+    max-width: 74rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 768px) { .container-narrow { padding-inline: 2rem; } }
+
+  /* ---------------- Buttons ---------------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.95rem 1.5rem;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    letter-spacing: -0.005em;
+    min-height: 48px;
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  @media (min-width: 768px) {
+    .btn { font-size: 1rem; padding: 0.95rem 1.65rem; }
+  }
+  .btn-gold {
+    background: var(--color-gold);
+    color: var(--color-navy-deep);
+    box-shadow: 0 1px 0 rgba(141, 78, 4, 0.35), 0 6px 20px -8px rgba(185, 143, 66, 0.55);
+  }
+  .btn-gold:hover { background: var(--color-gold-deep); color: var(--color-cream); transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-navy);
+    border: 1.5px solid var(--color-navy);
+  }
+  .btn-ghost:hover { background: var(--color-navy); color: var(--color-cream); }
+  .btn-ghost-light {
+    background: transparent;
+    color: var(--color-cream);
+    border: 1.5px solid rgba(253, 249, 243, 0.4);
+  }
+  .btn-ghost-light:hover { background: var(--color-cream); color: var(--color-navy); }
+
+  /* ---------------- Text accents ---------------- */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-teal);
+  }
+  .tag::before {
+    content: "";
+    width: 1.75rem;
+    height: 2px;
+    background: currentColor;
+  }
+
+  .hand-underline { display: inline; }
+
+  .rule-gold {
+    height: 3px;
+    width: 3.25rem;
+    background: var(--color-gold);
+    border-radius: 2px;
+  }
+
+  .grid-dots {
+    background-image: radial-gradient(var(--color-line) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: 0 0;
+  }
+
+  /* Animation primitives */
+  @keyframes ping {
+    75%, 100% { transform: scale(2); opacity: 0; }
+  }
+  .animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .animate-float-soft { animation: float-soft 6s ease-in-out infinite; }
+
+  @keyframes drift-orb {
+    0%, 100% { transform: translate(0,0) scale(1); }
+    50% { transform: translate(-20px,30px) scale(1.05); }
+  }
+  .animate-drift-orb { animation: drift-orb 18s ease-in-out infinite; }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2.4s linear infinite;
+  }
+
+  /* Reveal-on-scroll: opacity 0 + slide up. Element is given .reveal then
+     IntersectionObserver flips .in-view to trigger transition. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s cubic-bezier(0.16,1,0.3,1), transform 0.7s cubic-bezier(0.16,1,0.3,1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  .reveal.in-view { opacity: 1; transform: translateY(0); }
+
+  /* Pulsing dot (for "live"/"founding-25" markers) */
+  @keyframes glow-dot {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(185,143,66,0.5); }
+    50% { box-shadow: 0 0 0 8px rgba(185,143,66,0); }
+  }
+  .animate-glow-dot { animation: glow-dot 2s ease-in-out infinite; }
+
+  /* Browser-frame mockup chrome */
+  .browser-chrome {
+    background: linear-gradient(180deg, #f5eedf 0%, #ffffff 100%);
+    border: 1px solid var(--color-line);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.6) inset,
+      0 30px 60px -30px rgba(27,38,54,0.25),
+      0 16px 32px -16px rgba(7,102,122,0.18);
+  }
+  .browser-chrome-dark {
+    background: linear-gradient(180deg, #1b2636 0%, #2e4057 100%);
+    border: 1px solid rgba(232,223,201,0.1);
+    border-radius: 14px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.06) inset,
+      0 30px 60px -30px rgba(0,0,0,0.5),
+      0 16px 32px -16px rgba(7,102,122,0.4);
+  }
+
+  /* Subtle grain to add a premium analog feel on cream surfaces */
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  /* Animated typing caret */
+  @keyframes caret-blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+  .caret { animation: caret-blink 1s steps(1) infinite; }
+}
+
+/* ───────────────────────────────────────────────────────────────────────
+   GLASS THEME — Apple Liquid Glass aesthetic for admin + tenant shells.
+   Activated when <html data-theme="glass"> AND the content lives inside an
+   `.aesthera-shell` wrapper. Marketing pages don't have the wrapper so
+   they stay on the default Aesthera palette even if a user toggled glass
+   on the admin/tenant side and then navigated cross-page.
+
+   Liquid Glass signature features applied below:
+   1. Multi-stop animated radial gradient body — color shifts with eye flow
+   2. Translucent surfaces with backdrop-filter blur + saturate + brightness
+   3. Specular top-edge highlight (sharp 1px) + soft falloff (inset shadow)
+   4. Bottom-edge thickness shadow (inset 0 -1px 0 rgba(0,0,0,0.04))
+   5. Layered depth: sidebar more translucent than cards (closer = more solid)
+   6. Pill-shaped sidebar nav items (Apple's canonical control shape)
+   7. Hover lift on cards — gentle elevation with shadow expansion
+   8. Subtle noise overlay (~3% opacity) for material realism
+   9. Concentric rounding via existing rounded-xl / rounded-2xl utilities
+   10. Same ink colors as Aesthera theme so WCAG AA contrast stays valid
+   ─────────────────────────────────────────────────────────────────────── */
+
+[data-theme="glass"] .aesthera-shell {
+  /* Cards default to 0.55 — more opaque than the sidebar (which gets a more
+     transparent value below). Closer to the user = more solid, mimicking
+     Apple's depth-aware translucency model. */
+  --color-paper: rgba(255, 255, 255, 0.55);
+  --color-cream-deep: rgba(255, 255, 255, 0.32);
+  --color-line: rgba(255, 255, 255, 0.55);
+}
+
+/* Vivid multi-stop radial gradient body. 4 hot-spots in brand-adjacent hues
+   plus a base linear gradient. Animated drift adds the "alive" quality
+   Apple's wallpapers have, but slow enough (60s) not to be distracting. */
+[data-theme="glass"] body:has(.aesthera-shell) {
+  background:
+    radial-gradient(at 8% 4%, rgba(120, 168, 222, 0.55) 0%, transparent 50%),
+    radial-gradient(at 92% 8%, rgba(232, 181, 104, 0.42) 0%, transparent 45%),
+    radial-gradient(at 50% 92%, rgba(7, 122, 142, 0.38) 0%, transparent 55%),
+    radial-gradient(at 75% 45%, rgba(180, 130, 220, 0.20) 0%, transparent 50%),
+    linear-gradient(135deg, #e9eef6 0%, #fbf3e0 100%);
+  background-attachment: fixed;
+  background-size: 200% 200%;
+  animation: glass-drift 60s ease-in-out infinite alternate;
+  min-height: 100vh;
+}
+
+@keyframes glass-drift {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="glass"] body:has(.aesthera-shell) { animation: none; }
+}
+
+/* Subtle noise overlay — scoped to the shell with isolation:isolate so the
+   pseudo-element lands BEHIND shell content but ABOVE the body gradient.
+   Mix-blend overlay at 3.5% gives the glass surfaces a barely-perceptible
+   grain that breaks up the otherwise too-clean translucency. */
+[data-theme="glass"] .aesthera-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+[data-theme="glass"] .aesthera-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Sidebar — most translucent surface (40% white) so the body gradient
+   reads through it. Multi-layer specular highlights replicate real glass
+   catching light from above + the side. Drop shadow extends right to
+   visually float the sidebar from the content. */
+[data-theme="glass"] .aesthera-shell aside {
+  background: rgba(255, 255, 255, 0.40);
+  backdrop-filter: blur(32px) saturate(200%) brightness(105%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%) brightness(105%);
+  border-color: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 1px 0 0 rgba(255, 255, 255, 0.50),
+    inset -1px 0 0 rgba(0, 0, 0, 0.02),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    8px 0 32px -16px rgba(20, 30, 60, 0.10);
+  position: relative;
+}
+
+/* Mobile top header — same liquid glass treatment scaled for smaller height */
+[data-theme="glass"] .aesthera-shell header {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(200%) brightness(105%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%) brightness(105%);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.90),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 6px 24px rgba(20, 30, 60, 0.06);
+}
+
+/* Cards (rounded-xl + rounded-2xl + rounded-lg) — frosted with lit top edge
+   and soft glow falloff. The two inset highlights (sharp 1px white at 85%
+   + soft 8px-inset glow at 35%) together give the canonical Apple "wet"
+   look on card edges. */
+[data-theme="glass"] .aesthera-shell .rounded-xl,
+[data-theme="glass"] .aesthera-shell .rounded-2xl,
+[data-theme="glass"] .aesthera-shell .rounded-lg {
+  backdrop-filter: blur(24px) saturate(180%) brightness(105%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%) brightness(105%);
+  border-color: rgba(255, 255, 255, 0.50);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 8px 24px -8px rgba(255, 255, 255, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03),
+    0 4px 20px rgba(20, 30, 60, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Hover lift on cards — gentle elevation, brighter top edge, expanded
+   drop shadow. Mirrors the iOS focus/press response. */
+[data-theme="glass"] .aesthera-shell .rounded-xl:hover,
+[data-theme="glass"] .aesthera-shell .rounded-2xl:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 8px 24px -8px rgba(255, 255, 255, 0.50),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.03),
+    0 12px 32px rgba(20, 30, 60, 0.10);
+}
+
+/* Pill-shaped sidebar nav items — Apple's canonical control shape on
+   liquid-glass surfaces (Tab Bar, Toolbar, Menu items). Matches the
+   active-state highlight as a fully-rounded pill. */
+[data-theme="glass"] .aesthera-shell aside nav > a {
+  border-radius: 9999px;
+  padding-inline: 1rem;
+}
+
+/* Active nav item — solid navy pill that pops against the translucent
+   sidebar. Keeps the gold dot indicator from the base theme. */
+[data-theme="glass"] .aesthera-shell aside [aria-current="page"] {
+  background: rgba(27, 38, 54, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 4px 12px rgba(27, 38, 54, 0.18);
+}
+
+/* Buttons (.btn family) — mild glass treatment so they feel native to
+   the surface they sit on. Gold + ghost variants get distinct tints. */
+[data-theme="glass"] .aesthera-shell .btn {
+  backdrop-filter: blur(8px) saturate(180%);
+  -webkit-backdrop-filter: blur(8px) saturate(180%);
+}
+[data-theme="glass"] .aesthera-shell .btn-gold {
+  background: rgba(185, 143, 66, 0.92);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.40),
+    0 4px 14px rgba(185, 143, 66, 0.35);
+}
+[data-theme="glass"] .aesthera-shell .btn-ghost {
+  background: rgba(255, 255, 255, 0.30);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+/* Inputs + textareas — slightly higher opacity (0.78) than cards so the
+   cursor + typed text remain unambiguously legible. */
+[data-theme="glass"] .aesthera-shell input,
+[data-theme="glass"] .aesthera-shell textarea,
+[data-theme="glass"] .aesthera-shell select {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.55);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+[data-theme="glass"] .aesthera-shell input:focus,
+[data-theme="glass"] .aesthera-shell textarea:focus,
+[data-theme="glass"] .aesthera-shell select:focus {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: var(--color-teal);
+}
+
+/* Modals + overlay shells — when an idle-timeout dialog appears, the
+   z-100 modal panel itself should also get glass treatment for consistency.
+   Targeting role="dialog" since AdminIdleTimer renders a dialog shell. */
+[data-theme="glass"] [role="dialog"] > div {
+  backdrop-filter: blur(40px) saturate(200%) brightness(108%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(108%);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.04),
+    0 30px 80px rgba(20, 30, 60, 0.20);
+}
